@@ -9,8 +9,8 @@ AtNameDB = AtNameDB or {}
 
 local ADDON_NAME   = "AtName"
 local MACRO_PREFIX = "AN_"
-local ROWS_VISIBLE = 3
-local ROW_HEIGHT   = 18
+local ROWS_VISIBLE = 4
+local ROW_HEIGHT   = 20
 
 -------------------------------------------------------------------------------
 -- Helpers
@@ -59,7 +59,7 @@ local UpdateFocusMacros  -- forward declaration (defined after main frame)
 
 -- Dialog frame
 local focusDialog = CreateFrame("Frame", "AtNameFocusDialog", UIParent, "BackdropTemplate")
-focusDialog:SetSize(280, 140)
+focusDialog:SetSize(220, 90)
 focusDialog:SetPoint("CENTER")
 focusDialog:SetFrameStrata("DIALOG")
 focusDialog:SetBackdrop({
@@ -75,24 +75,15 @@ focusDialog:SetScript("OnDragStart", focusDialog.StartMoving)
 focusDialog:SetScript("OnDragStop", focusDialog.StopMovingOrSizing)
 focusDialog:Hide()
 
-local dialogTitle = focusDialog:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-dialogTitle:SetPoint("TOP", focusDialog, "TOP", 0, -16)
-dialogTitle:SetText("Set Focus")
-
-local dialogDivider = focusDialog:CreateTexture(nil, "ARTWORK")
-dialogDivider:SetTexture("Interface\\DialogFrame\\UI-DialogBox-Header")
-dialogDivider:SetSize(256, 32)
-dialogDivider:SetPoint("TOP", focusDialog, "TOP", 0, 4)
-
-local dialogBody = focusDialog:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-dialogBody:SetPoint("TOP", dialogTitle, "BOTTOM", 0, -12)
-dialogBody:SetWidth(240)
+local dialogBody = focusDialog:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+dialogBody:SetPoint("TOP", focusDialog, "TOP", 0, -18)
+dialogBody:SetWidth(196)
 dialogBody:SetJustifyH("CENTER")
 dialogBody:SetText("")  -- filled in by ShowFocusConfirm
 
 local dialogOk = CreateFrame("Button", nil, focusDialog, "UIPanelButtonTemplate")
-dialogOk:SetSize(80, 22)
-dialogOk:SetPoint("BOTTOMRIGHT", focusDialog, "BOTTOM", -6, 14)
+dialogOk:SetSize(72, 22)
+dialogOk:SetPoint("BOTTOMRIGHT", focusDialog, "BOTTOM", -4, 12)
 dialogOk:SetText("Okay")
 dialogOk:SetScript("OnClick", function()
     if not pendingFocus then return end
@@ -111,8 +102,8 @@ dialogOk:SetScript("OnClick", function()
 end)
 
 local dialogCancel = CreateFrame("Button", nil, focusDialog, "UIPanelButtonTemplate")
-dialogCancel:SetSize(80, 22)
-dialogCancel:SetPoint("BOTTOMLEFT", focusDialog, "BOTTOM", 6, 14)
+dialogCancel:SetSize(72, 22)
+dialogCancel:SetPoint("BOTTOMLEFT", focusDialog, "BOTTOM", 4, 12)
 dialogCancel:SetText("Cancel")
 dialogCancel:SetScript("OnClick", function()
     pendingFocus = nil
@@ -121,10 +112,7 @@ end)
 
 local function ShowFocusConfirm(name)
     pendingFocus = name
-    dialogBody:SetText(
-        "Update all |cffffcc00{focus}|r macros to:\n\n" ..
-        "|cffffcc00" .. name .. "|r"
-    )
+    dialogBody:SetText("Set focus to |cffffcc00" .. name .. "|r?")
     focusDialog:Show()
 end
 
@@ -133,7 +121,7 @@ end
 -------------------------------------------------------------------------------
 
 local frame = CreateFrame("Frame", "AtNameFrame", UIParent, "BasicFrameTemplateWithInset")
-frame:SetSize(320, 310)
+frame:SetSize(340, 400)
 frame:SetPoint("CENTER")
 frame:SetMovable(true)
 frame:EnableMouse(true)
@@ -235,26 +223,26 @@ helpBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 -------------------------------------------------------------------------------
 
 local focusLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-focusLabel:SetPoint("TOPLEFT", frame, "TOPLEFT", 12, -34)
+focusLabel:SetPoint("TOPLEFT", frame, "TOPLEFT", 16, -36)
 focusLabel:SetText("Focus:")
 
 local focusInput = CreateFrame("EditBox", "AtNameFocusInput", frame, "InputBoxTemplate")
-focusInput:SetSize(140, 20)
-focusInput:SetPoint("LEFT", focusLabel, "RIGHT", 6, 0)
+focusInput:SetSize(148, 20)
+focusInput:SetPoint("LEFT", focusLabel, "RIGHT", 8, 0)
 focusInput:SetAutoFocus(false)
 focusInput:SetMaxLetters(64)
 
 local btnFromTarget = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
-btnFromTarget:SetSize(80, 22)
-btnFromTarget:SetPoint("LEFT", focusInput, "RIGHT", 4, 0)
-btnFromTarget:SetText("@ Target")
+btnFromTarget:SetSize(98, 22)
+btnFromTarget:SetPoint("LEFT", focusInput, "RIGHT", 6, 0)
+btnFromTarget:SetText("From Target")
 
 -------------------------------------------------------------------------------
 -- Saved templates list
 -------------------------------------------------------------------------------
 
 local listLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-listLabel:SetPoint("TOPLEFT", focusLabel, "BOTTOMLEFT", 0, -12)
+listLabel:SetPoint("TOPLEFT", focusLabel, "BOTTOMLEFT", 0, -18)
 listLabel:SetText("Saved Templates:")
 
 -- Background for the list
@@ -267,13 +255,13 @@ listBg:SetBackdrop({
 })
 listBg:SetBackdropColor(0, 0, 0, 0.4)
 listBg:SetBackdropBorderColor(0.4, 0.4, 0.4, 0.8)
-listBg:SetPoint("TOPLEFT", listLabel, "BOTTOMLEFT", 0, -2)
-listBg:SetSize(288, ROWS_VISIBLE * ROW_HEIGHT + 4)
+listBg:SetPoint("TOPLEFT", listLabel, "BOTTOMLEFT", 0, -4)
+listBg:SetSize(308, ROWS_VISIBLE * ROW_HEIGHT + 4)
 
 local listScroll = CreateFrame("ScrollFrame", "AtNameListScroll", listBg,
     "FauxScrollFrameTemplate")
 listScroll:SetPoint("TOPLEFT", listBg, "TOPLEFT", 2, -2)
-listScroll:SetSize(265, ROWS_VISIBLE * ROW_HEIGHT)
+listScroll:SetSize(285, ROWS_VISIBLE * ROW_HEIGHT)
 listScroll:SetScript("OnVerticalScroll", function(self, offset)
     FauxScrollFrame_OnVerticalScroll(self, offset, ROW_HEIGHT,
         function() _G["AtNameListScrollUpdate"]() end)
@@ -283,13 +271,13 @@ end)
 local listRows = {}
 for i = 1, ROWS_VISIBLE do
     local row = CreateFrame("Frame", nil, listBg)
-    row:SetSize(265, ROW_HEIGHT)
+    row:SetSize(285, ROW_HEIGHT)
     row:SetPoint("TOPLEFT", listBg, "TOPLEFT", 2, -2 - (i - 1) * ROW_HEIGHT)
 
     -- Invisible load button covering the whole row (minus delete btn)
     local loadBtn = CreateFrame("Button", nil, row)
     loadBtn:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 0)
-    loadBtn:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -70, 0)
+    loadBtn:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -76, 0)
     loadBtn:RegisterForClicks("LeftButtonUp")
     loadBtn:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
 
@@ -367,11 +355,11 @@ function AtNameListScrollUpdate() end  -- placeholder, overwritten below
 -------------------------------------------------------------------------------
 
 local nameLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-nameLabel:SetPoint("TOPLEFT", listBg, "BOTTOMLEFT", 0, -8)
+nameLabel:SetPoint("TOPLEFT", listBg, "BOTTOMLEFT", 0, -14)
 nameLabel:SetText("Name:")
 
 local nameInput = CreateFrame("EditBox", "AtNameNameInput", frame, "InputBoxTemplate")
-nameInput:SetSize(140, 20)
+nameInput:SetSize(148, 20)
 nameInput:SetPoint("LEFT", nameLabel, "RIGHT", 8, 0)
 nameInput:SetAutoFocus(false)
 nameInput:SetMaxLetters(13)   -- AN_ uses 3 of 16
@@ -386,8 +374,8 @@ nameHint:SetText("→ AN_...")
 -------------------------------------------------------------------------------
 
 local bodyLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-bodyLabel:SetPoint("TOPLEFT", nameLabel, "BOTTOMLEFT", 0, -10)
-bodyLabel:SetText("Body  ({focus} or {target})")
+bodyLabel:SetPoint("TOPLEFT", nameLabel, "BOTTOMLEFT", 0, -16)
+bodyLabel:SetText("Body:  (use {focus} as placeholder)")
 
 local scrollBorder = CreateFrame("Frame", nil, frame, "BackdropTemplate")
 scrollBorder:SetBackdrop({
@@ -398,8 +386,8 @@ scrollBorder:SetBackdrop({
 })
 scrollBorder:SetBackdropColor(0, 0, 0, 0.4)
 scrollBorder:SetBackdropBorderColor(0.4, 0.4, 0.4, 0.8)
-scrollBorder:SetPoint("TOPLEFT", bodyLabel, "BOTTOMLEFT", 0, -2)
-scrollBorder:SetSize(288, 62)
+scrollBorder:SetPoint("TOPLEFT", bodyLabel, "BOTTOMLEFT", 0, -4)
+scrollBorder:SetSize(308, 80)
 
 local scrollFrame = CreateFrame("ScrollFrame", nil, scrollBorder, "UIPanelScrollFrameTemplate")
 scrollFrame:SetPoint("TOPLEFT", scrollBorder, "TOPLEFT", 4, -4)
@@ -419,8 +407,8 @@ scrollFrame:SetScrollChild(bodyInput)
 -------------------------------------------------------------------------------
 
 local statusText = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-statusText:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 12, 34)
-statusText:SetWidth(290)
+statusText:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 16, 36)
+statusText:SetWidth(308)
 statusText:SetJustifyH("LEFT")
 statusText:SetText("")
 
@@ -591,7 +579,7 @@ end
 
 local btnCreate = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
 btnCreate:SetSize(100, 22)
-btnCreate:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 12, 10)
+btnCreate:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 16, 10)
 btnCreate:SetText("Make Macro")
 btnCreate:SetScript("OnClick", CreateFocusMacro)
 
