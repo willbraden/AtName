@@ -57,29 +57,46 @@ end
 local pendingFocus = nil
 local UpdateFocusMacros  -- forward declaration (defined after main frame)
 
-local focusConfirmBtn = CreateFrame("Button", "AtNameFocusConfirmBtn", UIParent,
-    "BackdropTemplate")
-focusConfirmBtn:SetSize(220, 32)
-focusConfirmBtn:SetPoint("TOP", UIParent, "TOP", 0, -180)
-focusConfirmBtn:SetBackdrop({
+-- Dialog frame
+local focusDialog = CreateFrame("Frame", "AtNameFocusDialog", UIParent, "BackdropTemplate")
+focusDialog:SetSize(280, 140)
+focusDialog:SetPoint("CENTER")
+focusDialog:SetFrameStrata("DIALOG")
+focusDialog:SetBackdrop({
     bgFile   = "Interface\\DialogFrame\\UI-DialogBox-Background",
-    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-    tile = true, tileSize = 32, edgeSize = 10,
-    insets = { left = 3, right = 3, top = 3, bottom = 3 },
+    edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+    tile = true, tileSize = 32, edgeSize = 32,
+    insets = { left = 11, right = 12, top = 12, bottom = 11 },
 })
-focusConfirmBtn:SetBackdropColor(0.05, 0.05, 0.15, 0.95)
-focusConfirmBtn:SetBackdropBorderColor(1, 0.82, 0, 0.9)
-focusConfirmBtn:RegisterForClicks("LeftButtonUp")
-focusConfirmBtn:Hide()
+focusDialog:SetMovable(true)
+focusDialog:EnableMouse(true)
+focusDialog:RegisterForDrag("LeftButton")
+focusDialog:SetScript("OnDragStart", focusDialog.StartMoving)
+focusDialog:SetScript("OnDragStop", focusDialog.StopMovingOrSizing)
+focusDialog:Hide()
 
-local focusConfirmText = focusConfirmBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-focusConfirmText:SetPoint("CENTER", focusConfirmBtn, "CENTER", 0, 0)
+local dialogTitle = focusDialog:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+dialogTitle:SetPoint("TOP", focusDialog, "TOP", 0, -16)
+dialogTitle:SetText("Set Focus")
 
-focusConfirmBtn:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
+local dialogDivider = focusDialog:CreateTexture(nil, "ARTWORK")
+dialogDivider:SetTexture("Interface\\DialogFrame\\UI-DialogBox-Header")
+dialogDivider:SetSize(256, 32)
+dialogDivider:SetPoint("TOP", focusDialog, "TOP", 0, 4)
 
-focusConfirmBtn:SetScript("OnClick", function()
+local dialogBody = focusDialog:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+dialogBody:SetPoint("TOP", dialogTitle, "BOTTOM", 0, -12)
+dialogBody:SetWidth(240)
+dialogBody:SetJustifyH("CENTER")
+dialogBody:SetText("")  -- filled in by ShowFocusConfirm
+
+local dialogOk = CreateFrame("Button", nil, focusDialog, "UIPanelButtonTemplate")
+dialogOk:SetSize(80, 22)
+dialogOk:SetPoint("BOTTOMRIGHT", focusDialog, "BOTTOM", -6, 14)
+dialogOk:SetText("Okay")
+dialogOk:SetScript("OnClick", function()
     if not pendingFocus then return end
-    -- This is a hardware event — EditMacro is now allowed
+    -- Hardware event — EditMacro is allowed here
     local count = UpdateFocusMacros(pendingFocus)
     AtNameDB.focusName = pendingFocus
     if _G["AtNameFocusInput"] then _G["AtNameFocusInput"]:SetText(pendingFocus) end
@@ -90,27 +107,25 @@ focusConfirmBtn:SetScript("OnClick", function()
     end
     DEFAULT_CHAT_FRAME:AddMessage(msg)
     pendingFocus = nil
-    focusConfirmBtn:Hide()
+    focusDialog:Hide()
 end)
 
-focusConfirmBtn:SetScript("OnEnter", function(self)
-    GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-    GameTooltip:SetText("Click to apply focus and update macros")
-    GameTooltip:Show()
+local dialogCancel = CreateFrame("Button", nil, focusDialog, "UIPanelButtonTemplate")
+dialogCancel:SetSize(80, 22)
+dialogCancel:SetPoint("BOTTOMLEFT", focusDialog, "BOTTOM", 6, 14)
+dialogCancel:SetText("Cancel")
+dialogCancel:SetScript("OnClick", function()
+    pendingFocus = nil
+    focusDialog:Hide()
 end)
-focusConfirmBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
 local function ShowFocusConfirm(name)
     pendingFocus = name
-    focusConfirmText:SetText("|cff88ff88/fn|r  \226\134\146  |cffffcc00" .. name .. "|r  |cffaaaaaa(click to apply)|r")
-    focusConfirmBtn:Show()
-    -- Auto-dismiss after 12 seconds if ignored
-    C_Timer.After(12, function()
-        if focusConfirmBtn:IsShown() and pendingFocus == name then
-            focusConfirmBtn:Hide()
-            pendingFocus = nil
-        end
-    end)
+    dialogBody:SetText(
+        "Update all |cffffcc00{focus}|r macros to:\n\n" ..
+        "|cffffcc00" .. name .. "|r"
+    )
+    focusDialog:Show()
 end
 
 -------------------------------------------------------------------------------
