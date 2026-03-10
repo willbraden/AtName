@@ -65,6 +65,84 @@ frame.title:SetPoint("LEFT", frame.TitleBg, "LEFT", 5, 0)
 frame.title:SetText("AtName - Focus Simulator")
 
 -------------------------------------------------------------------------------
+-- Help overlay
+-------------------------------------------------------------------------------
+
+local helpOverlay = CreateFrame("Frame", nil, frame, "BackdropTemplate")
+helpOverlay:SetPoint("TOPLEFT", frame, "TOPLEFT", 8, -22)
+helpOverlay:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -8, 8)
+helpOverlay:SetBackdrop({
+    bgFile   = "Interface\\DialogFrame\\UI-DialogBox-Background",
+    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+    tile = true, tileSize = 32, edgeSize = 12,
+    insets = { left = 4, right = 4, top = 4, bottom = 4 },
+})
+helpOverlay:SetBackdropColor(0.05, 0.05, 0.10, 0.97)
+helpOverlay:SetBackdropBorderColor(0.6, 0.6, 0.6, 0.9)
+helpOverlay:SetFrameLevel(frame:GetFrameLevel() + 10)
+helpOverlay:Hide()
+
+local helpText = helpOverlay:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+helpText:SetPoint("TOPLEFT", helpOverlay, "TOPLEFT", 14, -14)
+helpText:SetPoint("BOTTOMRIGHT", helpOverlay, "BOTTOMRIGHT", -14, 36)
+helpText:SetJustifyH("LEFT")
+helpText:SetJustifyV("TOP")
+helpText:SetSpacing(3)
+helpText:SetText(
+    "|cffffcc00Slash Commands|r\n" ..
+    "|cff88ff88/focus|r  — set focus to current target\n" ..
+    "|cff88ff88/focus|r |cffaaaaaa[name]|r  — set focus by name\n" ..
+    "|cff88ff88/an|r  — toggle this window\n" ..
+    "\n" ..
+    "|cffffcc00Creating a Macro|r\n" ..
+    "1. Set |cff88ff88Focus|r (type a name or click From Target)\n" ..
+    "2. Enter a short |cff88ff88Name|r (becomes AN_Name)\n" ..
+    "3. Write the |cff88ff88Body|r — use |cffffcc00{focus}|r where you\n" ..
+    "   want the player name substituted\n" ..
+    "4. Click |cff88ff88Make Macro|r — drag it to your bar\n" ..
+    "\n" ..
+    "|cffffcc00Example body|r\n" ..
+    "|cffaaaaaa#showtooltip\n" ..
+    "/cast [@{focus},exists] Lay on Hands\n" ..
+    "; Lay on Hands|r\n" ..
+    "\n" ..
+    "|cffffcc00Template List Buttons|r\n" ..
+    "|cff88ff88[row click]|r  Load into form\n" ..
+    "|cff88ff88@|r  Retarget this macro to current target\n" ..
+    "|cff88ccffG|r  Grab macro onto cursor → click action bar\n" ..
+    "|cffff4444x|r  Remove from saved list\n" ..
+    "\n" ..
+    "|cffffcc00Tip:|r Macros using |cffffcc00{focus}|r all update\n" ..
+    "together when you use |cff88ff88/focus|r."
+)
+
+local helpClose = CreateFrame("Button", nil, helpOverlay, "UIPanelButtonTemplate")
+helpClose:SetSize(80, 22)
+helpClose:SetPoint("BOTTOM", helpOverlay, "BOTTOM", 0, 10)
+helpClose:SetText("Close")
+helpClose:SetScript("OnClick", function() helpOverlay:Hide() end)
+
+-- ? button in title bar
+local helpBtn = CreateFrame("Button", nil, frame)
+helpBtn:SetSize(18, 18)
+helpBtn:SetPoint("RIGHT", frame.TitleBg, "RIGHT", -22, 0)
+helpBtn:SetNormalFontObject(GameFontNormal)
+helpBtn:SetText("|cff88ccff?|r")
+helpBtn:SetScript("OnClick", function()
+    if helpOverlay:IsShown() then
+        helpOverlay:Hide()
+    else
+        helpOverlay:Show()
+    end
+end)
+helpBtn:SetScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+    GameTooltip:SetText("Show help & instructions")
+    GameTooltip:Show()
+end)
+helpBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+-------------------------------------------------------------------------------
 -- Focus row
 -------------------------------------------------------------------------------
 
