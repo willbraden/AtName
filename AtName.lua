@@ -332,20 +332,23 @@ end
 -- Core macro operations
 -------------------------------------------------------------------------------
 
-local function UpdateAllMacros(focusName)
+-- Updates only macros whose template contains {focus}, using the global focus name.
+local function UpdateFocusMacros(focusName)
     if focusName == "" then return 0 end
     local db    = AtNameDB.macros or {}
     local icon  = "INV_Misc_QuestionMark"
     local count = 0
     WithMacroFrame(function()
         for macroName, entry in pairs(db) do
-            local idx = GetMacroIndexByName(macroName)
-            if idx and idx > 0 then
-                EditMacro(idx, macroName, icon, ApplyTemplate(entry.template, focusName))
-                entry.focusName = focusName
-                count = count + 1
-            else
-                db[macroName] = nil   -- deleted externally; clean up
+            if entry.template and entry.template:find("{focus}") then
+                local idx = GetMacroIndexByName(macroName)
+                if idx and idx > 0 then
+                    EditMacro(idx, macroName, icon, ApplyTemplate(entry.template, focusName))
+                    entry.focusName = focusName
+                    count = count + 1
+                else
+                    db[macroName] = nil
+                end
             end
         end
     end)
@@ -459,6 +462,28 @@ end)
 -------------------------------------------------------------------------------
 -- Slash commands
 -------------------------------------------------------------------------------
+
+-- /focus [name]  — set global focus by name or from current target, update all {focus} macros
+SLASH_ATFOCUS1 = "/focus"
+SlashCmdList["ATFOCUS"] = function(msg)
+    local name = Trim(msg)
+    if name == "" then
+        name = UnitName("target") or ""
+    end
+    if name == "" then
+        DEFAULT_CHAT_FRAME:AddMessage("|cffffcc00AtName:|r No target and no name given.")
+        return
+    end
+    AtNameDB.focusName = name
+    if frame:IsShown() then focusInput:SetText(name) end
+    local count = UpdateFocusMacros(name)
+    AtNameListScrollUpdate()
+    local msg2 = "|cffffcc00AtName focus \226\134\146 " .. name .. "|r"
+    if count > 0 then
+        msg2 = msg2 .. "  |cff888888(" .. count .. " macro(s) updated)|r"
+    end
+    DEFAULT_CHAT_FRAME:AddMessage(msg2)
+end
 
 SLASH_ATNAME1 = "/atname"
 SLASH_ATNAME2 = "/an"
