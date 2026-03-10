@@ -20,8 +20,10 @@ local function Trim(s)
     return (s:gsub("^%s*(.-)%s*$", "%1"))
 end
 
-local function ApplyTemplate(template, focusName)
-    return (template:gsub("{focus}", focusName))
+local function ApplyTemplate(template, name)
+    -- {focus} = global focus (updated by /focus); {target} = per-macro target (updated by @ button)
+    -- Both are substituted with whatever name is passed to this function
+    return (template:gsub("{focus}", name):gsub("{target}", name))
 end
 
 -- Classic Era requires MacroFrame open to call Create/Edit/DeleteMacro.
@@ -44,6 +46,70 @@ local function GetSortedTemplates()
     end
     table.sort(list)
     return list
+end
+
+-------------------------------------------------------------------------------
+-- Focus confirmation button
+-- EditMacro is a protected function that requires a hardware event (button click).
+-- When /focus is typed, we store the pending name and show this button for the user to click.
+-------------------------------------------------------------------------------
+
+local pendingFocus = nil
+
+local focusConfirmBtn = CreateFrame("Button", "AtNameFocusConfirmBtn", UIParent,
+    "BackdropTemplate")
+focusConfirmBtn:SetSize(220, 32)
+focusConfirmBtn:SetPoint("TOP", UIParent, "TOP", 0, -180)
+focusConfirmBtn:SetBackdrop({
+    bgFile   = "Interface\\DialogFrame\\UI-DialogBox-Background",
+    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+    tile = true, tileSize = 32, edgeSize = 10,
+    insets = { left = 3, right = 3, top = 3, bottom = 3 },
+})
+focusConfirmBtn:SetBackdropColor(0.05, 0.05, 0.15, 0.95)
+focusConfirmBtn:SetBackdropBorderColor(1, 0.82, 0, 0.9)
+focusConfirmBtn:RegisterForClicks("LeftButtonUp")
+focusConfirmBtn:Hide()
+
+local focusConfirmText = focusConfirmBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+focusConfirmText:SetPoint("CENTER", focusConfirmBtn, "CENTER", 0, 0)
+
+focusConfirmBtn:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
+
+focusConfirmBtn:SetScript("OnClick", function()
+    if not pendingFocus then return end
+    -- This is a hardware event — EditMacro is now allowed
+    local count = UpdateFocusMacros(pendingFocus)
+    AtNameDB.focusName = pendingFocus
+    if _G["AtNameFocusInput"] then _G["AtNameFocusInput"]:SetText(pendingFocus) end
+    AtNameListScrollUpdate()
+    local msg = "|cffffcc00AtName focus \226\134\146 " .. pendingFocus .. "|r"
+    if count > 0 then
+        msg = msg .. "  |cff888888(" .. count .. " macro(s) updated)|r"
+    end
+    DEFAULT_CHAT_FRAME:AddMessage(msg)
+    pendingFocus = nil
+    focusConfirmBtn:Hide()
+end)
+
+focusConfirmBtn:SetScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+    GameTooltip:SetText("Click to apply focus and update macros")
+    GameTooltip:Show()
+end)
+focusConfirmBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+local function ShowFocusConfirm(name)
+    pendingFocus = name
+    focusConfirmText:SetText("|cff88ff88/focus|r  \226\134\146  |cffffcc00" .. name .. "|r  |cffaaaaaa(click to apply)|r")
+    focusConfirmBtn:Show()
+    -- Auto-dismiss after 12 seconds if ignored
+    C_Timer.After(12, function()
+        if focusConfirmBtn:IsShown() and pendingFocus == name then
+            focusConfirmBtn:Hide()
+            pendingFocus = nil
+        end
+    end)
 end
 
 -------------------------------------------------------------------------------
@@ -112,8 +178,13 @@ helpText:SetText(
     "|cff88ccffG|r  Grab macro onto cursor → click action bar\n" ..
     "|cffff4444x|r  Remove from saved list\n" ..
     "\n" ..
-    "|cffffcc00Tip:|r Macros using |cffffcc00{focus}|r all update\n" ..
-    "together when you use |cff88ff88/focus|r."
+    "|cffffcc00Placeholders|r\n" ..
+    "|cffffcc00{focus}|r  Updated by |cff88ff88/focus|r (all at once)\n" ..
+    "|cffffcc00{target}|r  Updated only by the |cff88ff88@|r row button\n" ..
+    "\n" ..
+    "|cffffcc00Tip:|r |cff88ff88/focus|r shows a button on screen —\n" ..
+    "click it once to apply. (WoW requires a click\n" ..
+    "to edit macros.)"
 )
 
 local helpClose = CreateFrame("Button", nil, helpOverlay, "UIPanelButtonTemplate")
@@ -552,15 +623,10 @@ SlashCmdList["ATFOCUS"] = function(msg)
         DEFAULT_CHAT_FRAME:AddMessage("|cffffcc00AtName:|r No target and no name given.")
         return
     end
-    AtNameDB.focusName = name
-    if frame:IsShown() then focusInput:SetText(name) end
-    local count = UpdateFocusMacros(name)
-    AtNameListScrollUpdate()
-    local msg2 = "|cffffcc00AtName focus \226\134\146 " .. name .. "|r"
-    if count > 0 then
-        msg2 = msg2 .. "  |cff888888(" .. count .. " macro(s) updated)|r"
-    end
-    DEFAULT_CHAT_FRAME:AddMessage(msg2)
+    -- Can't call EditMacro directly from slash command (not a hardware event).
+    -- Show a confirm button the user clicks to apply.
+    ShowFocusConfirm(name)
+    DEFAULT_CHAT_FRAME:AddMessage("|cffffcc00AtName:|r Click the button on screen to apply focus \226\134\146 |cffffcc00" .. name .. "|r")
 end
 
 SLASH_ATNAME1 = "/atname"
