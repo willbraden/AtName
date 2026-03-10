@@ -55,6 +55,7 @@ end
 -------------------------------------------------------------------------------
 
 local pendingFocus = nil
+local UpdateFocusMacros  -- forward declaration (defined after main frame)
 
 local focusConfirmBtn = CreateFrame("Button", "AtNameFocusConfirmBtn", UIParent,
     "BackdropTemplate")
@@ -483,7 +484,7 @@ end
 -------------------------------------------------------------------------------
 
 -- Updates only macros whose template contains {focus}, using the global focus name.
-local function UpdateFocusMacros(focusName)
+UpdateFocusMacros = function(focusName)
     if focusName == "" then return 0 end
     local db    = AtNameDB.macros or {}
     local icon  = "INV_Misc_QuestionMark"
