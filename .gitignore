@@ -1,0 +1,3 @@
+# WoW saved variables (contain player data, not source)
+SavedVariables/
+*.lua.bak

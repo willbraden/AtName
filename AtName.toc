@@ -1,0 +1,8 @@
+## Interface: 11502
+## Title: AtName
+## Notes: Simulates a focus target for WoW Classic using named macros
+## Author: You
+## Version: 1.0
+## SavedVariables: AtNameDB
+
+AtName.lua
