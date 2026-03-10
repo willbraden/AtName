@@ -101,7 +101,7 @@ focusConfirmBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
 local function ShowFocusConfirm(name)
     pendingFocus = name
-    focusConfirmText:SetText("|cff88ff88/focus|r  \226\134\146  |cffffcc00" .. name .. "|r  |cffaaaaaa(click to apply)|r")
+    focusConfirmText:SetText("|cff88ff88/fn|r  \226\134\146  |cffffcc00" .. name .. "|r  |cffaaaaaa(click to apply)|r")
     focusConfirmBtn:Show()
     -- Auto-dismiss after 12 seconds if ignored
     C_Timer.After(12, function()
@@ -156,8 +156,9 @@ helpText:SetJustifyV("TOP")
 helpText:SetSpacing(3)
 helpText:SetText(
     "|cffffcc00Slash Commands|r\n" ..
-    "|cff88ff88/focus|r  — set focus to current target\n" ..
-    "|cff88ff88/focus|r |cffaaaaaa[name]|r  — set focus by name\n" ..
+    "|cff88ff88/fn|r  — set focus to current target\n" ..
+    "|cff88ff88/fn|r |cffaaaaaa[name]|r  — set focus by name\n" ..
+    "|cff88ff88/atfocus|r  — same as /fn\n" ..
     "|cff88ff88/an|r  — toggle this window\n" ..
     "\n" ..
     "|cffffcc00Creating a Macro|r\n" ..
@@ -182,7 +183,7 @@ helpText:SetText(
     "|cffffcc00{focus}|r  Updated by |cff88ff88/focus|r (all at once)\n" ..
     "|cffffcc00{target}|r  Updated only by the |cff88ff88@|r row button\n" ..
     "\n" ..
-    "|cffffcc00Tip:|r |cff88ff88/focus|r shows a button on screen —\n" ..
+    "|cffffcc00Tip:|r |cff88ff88/fn|r shows a button on screen —\n" ..
     "click it once to apply. (WoW requires a click\n" ..
     "to edit macros.)"
 )
@@ -612,8 +613,10 @@ end)
 -- Slash commands
 -------------------------------------------------------------------------------
 
--- /focus [name]  — set global focus by name or from current target, update all {focus} macros
-SLASH_ATFOCUS1 = "/focus"
+-- /fn [name] or /atfocus [name]  — set global focus, update all {focus} macros
+-- (/focus conflicts with the game client or other addons, so we use /fn)
+SLASH_ATFOCUS1 = "/fn"
+SLASH_ATFOCUS2 = "/atfocus"
 SlashCmdList["ATFOCUS"] = function(msg)
     local name = Trim(msg)
     if name == "" then
@@ -626,7 +629,7 @@ SlashCmdList["ATFOCUS"] = function(msg)
     -- Can't call EditMacro directly from slash command (not a hardware event).
     -- Show a confirm button the user clicks to apply.
     ShowFocusConfirm(name)
-    DEFAULT_CHAT_FRAME:AddMessage("|cffffcc00AtName:|r Click the button on screen to apply focus \226\134\146 |cffffcc00" .. name .. "|r")
+    DEFAULT_CHAT_FRAME:AddMessage("|cffffcc00AtName:|r Click the on-screen button to apply focus \226\134\146 |cffffcc00" .. name .. "|r  |cffaaaaaa(/fn or /atfocus)|r")
 end
 
 SLASH_ATNAME1 = "/atname"
