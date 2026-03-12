@@ -647,7 +647,7 @@ end
 -- Init
 -------------------------------------------------------------------------------
 
-local initFrame = CreateFrame("Frame")
+local initFrame = CreateFrame("Frame", "AtNameInitFrame")
 initFrame:RegisterEvent("ADDON_LOADED")
 initFrame:SetScript("OnEvent", function(self, event, addon)
     if addon == ADDON_NAME then
@@ -664,3 +664,21 @@ initFrame:SetScript("OnEvent", function(self, event, addon)
         self:UnregisterEvent("ADDON_LOADED")
     end
 end)
+
+-------------------------------------------------------------------------------
+-- Test export (only active when _TEST = true, e.g. from busted test suite)
+-------------------------------------------------------------------------------
+
+if _TEST then
+    _G.AtNameInternal = {
+        Trim                 = Trim,
+        ApplyTemplate        = ApplyTemplate,
+        GetSortedTemplates   = GetSortedTemplates,
+        UpdateFocusMacros    = UpdateFocusMacros,
+        CreateFocusMacro     = CreateFocusMacro,
+        ClearAddonMacros     = ClearAddonMacros,
+        ApplyFocus           = ApplyFocus,
+        DeleteTemplate       = DeleteTemplate,
+        LoadTemplateIntoForm = LoadTemplateIntoForm,
+    }
+end

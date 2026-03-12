@@ -1,0 +1,8 @@
+return {
+  default = {
+    verbose   = true,
+    shuffle   = false,
+    lpath     = "./?.lua;./tests/?.lua",
+    pattern   = "test_",
+  },
+}
